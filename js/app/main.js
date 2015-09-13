@@ -39,8 +39,35 @@ function ($) {
       // 7. "u" or "U" is replaced by "rrrrRr"
       // 8. "r" or "R' is replaced by "RR"
 
+
       var engInput = $('#english').val();
 
+      var ruleRegExp = new RegExp("(r\\b)|(\\b[aA]\\b)|([eE])|([iI])|([oO])|([uU])|([rR](?!\\b))", "g");
+      var toZombieStr = ["rh", "hra", "rr", "rrRr", "rrrRr", "rrrrRr", "RR"];
+      var zombifiedStr = "";
+      var myArray;
+      var currentPos = 0;
+      while ((myArray = ruleRegExp.exec(engInput)) !== null) {
+        var strRepWith;
+        for (var i=1; i<myArray.length; i++) {
+          if (!!myArray[i]) {
+            strRepWith = toZombieStr[i-1];
+          }
+        }
+
+        var matchedPos = myArray.index;
+        var strToKeep = engInput.substring (currentPos, matchedPos);
+
+        var newStr = (!!strToKeep) ? strToKeep+strRepWith : strRepWith;
+        zombifiedStr += newStr;
+
+        currentPos = ruleRegExp.lastIndex;
+      }
+      if (currentPos < engInput.length) {
+        zombifiedStr += engInput.substring (currentPos, engInput.length);
+      }
+
+/**
       var zombifiedStrRegular = "";
       for (var i=0; i<engInput.length; i++) {
         var ch = engInput.charAt(i);
@@ -66,7 +93,7 @@ function ($) {
         if (resultStr === null) resultStr = ch;
         zombifiedStr = zombifiedStr.concat (resultStr);
       }
-
+**/
       $('#zombie').val(zombifiedStr);
     }
 
