@@ -39,15 +39,17 @@ function ($) {
       // 7. "u" or "U" is replaced by "rrrrRr"
       // 8. "r" or "R' is replaced by "RR"
 
-
       var engInput = $('#english').val();
 
-      var ruleRegExp = new RegExp("(r\\b)|(\\b[aA]\\b)|([eE])|([iI])|([oO])|([uU])|([rR](?!\\b))", "g");
+      var ruleRegExp = new RegExp("(r\\b)|(\\b[aA]\\b)|([eE])|([iI])|([oO])|([uU])|([rR](?!\\b))", "gm");
       var toZombieStr = ["rh", "hra", "rr", "rrRr", "rrrRr", "rrrrRr", "RR"];
       var zombifiedStr = "";
+      var backToEnglishStr = "";
       var myArray;
       var currentPos = 0;
       while ((myArray = ruleRegExp.exec(engInput)) !== null) {
+
+        // Find matched rule and translated string.
         var strRepWith;
         for (var i=1; i<myArray.length; i++) {
           if (!!myArray[i]) {
@@ -55,18 +57,45 @@ function ($) {
           }
         }
 
+        // Compose new string from current position to matched position, and
+        // append it to the zombified string.
         var matchedPos = myArray.index;
         var strToKeep = engInput.substring (currentPos, matchedPos);
-
         var newStr = (!!strToKeep) ? strToKeep+strRepWith : strRepWith;
         zombifiedStr += newStr;
 
+        // Update current position.
         currentPos = ruleRegExp.lastIndex;
       }
+
+      // If there is any remaining string to translate, do it here.
       if (currentPos < engInput.length) {
         zombifiedStr += engInput.substring (currentPos, engInput.length);
       }
 
+      // Need to finalize for capitalizing the first character of sentences.
+      var zombifiedStrNew = "";
+      var currentPos = 0;
+      var capRegExp = new RegExp ("(?:[.!?]\\s*)\\w","gm");
+      while ((myArray = capRegExp.exec(zombifiedStr)) !== null) {
+        var matchedStr = myArray[0];
+        var posLastChar = myArray.index + matchedStr.length - 1;
+
+        zombifiedStrNew += zombifiedStr.substring (currentPos, posLastChar) + matchedStr.charAt(matchedStr.length - 1).toUpperCase ();
+        currentPos = capRegExp.lastIndex;
+      }
+      if (currentPos < zombifiedStr.length) {
+        zombifiedStrNew += zombifiedStr.substring (currentPos, zombifiedStr.length);
+      }
+
+      zombifiedStr = zombifiedStrNew;
+
+      //
+      // TRansate back to English
+      //
+      //var ruleRegExp2 = new RegExp("(rh\\b)|(\\b(hra)|(Hra)\\b)|(rr)|([iI])|([oO])|([uU])|([rR](?!\\b))", "g");
+
+      backToEnglishStr = zombifiedStr;
 /**
       var zombifiedStrRegular = "";
       for (var i=0; i<engInput.length; i++) {
@@ -95,6 +124,8 @@ function ($) {
       }
 **/
       $('#zombie').val(zombifiedStr);
+      $('#zombie2').val(zombifiedStr);
+      $('#english2').val(backToEnglishStr);
     }
 
     function unzombify(){
