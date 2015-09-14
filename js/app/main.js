@@ -18,16 +18,18 @@ function ($) {
     var regularRules = [
       new ZombifyRule_End_r (),
       new ZombifyRule_aA (),
-      new ZombifyRule_eE (),
-      new ZombifyRule_iI (),
-      new ZombifyRule_oO (),
+      new ZombifyRule_rR (),
+      new ZombifyRule_yY (),
+      new ZombifyRule_wW (),
       new ZombifyRule_uU (),
-      new ZombifyRule_rR ()
+      new ZombifyRule_oO (),
+      new ZombifyRule_iI (),
+      new ZombifyRule_eE ()
     ];
     var endRules = [
       new ZombifyRule_CAP ()
     ]
-    var zombieStr = "";
+
     function zombify(){
       // 1. lower-case "r" at the end of words replaced with "rh".
       // 2. an "a" or "A" by itself will be replaced with "hra".
@@ -38,98 +40,121 @@ function ($) {
       // 6. "o" or "O" is replaced by "rrrRr"
       // 7. "u" or "U" is replaced by "rrrrRr"
       // 8. "r" or "R' is replaced by "RR"
+      // 9. "w" or "W' is replaced by "wRw"
+      //10. "y" or "Y' is replaced by "wwRy"
 
-      var engInput = $('#english').val();
+      var inputStr = $('#english').val();
 
-      var ruleRegExp = new RegExp("(r\\b)|(\\b[aA]\\b)|([eE])|([iI])|([oO])|([uU])|([rR](?!\\b))", "gm");
-      var toZombieStr = ["rh", "hra", "rr", "rrRr", "rrrRr", "rrrrRr", "RR"];
-      var zombifiedStr = "";
-      var backToEnglishStr = "";
+      // Apply regular rules.
+      var resultStr = applyRegularRules (true, inputStr);
+
+      // Apply end rules.
+      for (var i=0; i<endRules.length; i++) {
+        resultStr = endRules[i].zombify (resultStr);
+      }
+
+      $('#zombie').val(resultStr);
+      $('#zombie2').val(resultStr);
+
+      // Testing purpose!!!!
+      unzombify ();
+    }
+
+    function unzombify(){
+      var inputStr = $('#zombie').val();
+
+      // Apply regular rules.
+      var resultStr = applyRegularRules (false, inputStr);
+
+      // Apply end rules.
+      for (var i=0; i<endRules.length; i++) {
+        resultStr = endRules[i].unzombify (resultStr);
+      }
+
+      $('#english2').val(resultStr);
+    }
+
+    //
+    // Apply regular rules
+    //
+    function applyRegularRules (isZombify, inputStr) {
+      var ruleRegExpStr = "";
+      for (var i=0; i<regularRules.length; i++) {
+        ruleRegExpStr += (isZombify)  ? regularRules[i].getRegExpForEtoZ ()
+                                      : regularRules[i].getRegExpForZtoE ();
+        if (i < (regularRules.length-1)) ruleRegExpStr += "|";
+      }
+      var ruleRegExp = new RegExp(ruleRegExpStr, "gm");
+
+      var resultStr = "";
       var myArray;
       var currentPos = 0;
-      while ((myArray = ruleRegExp.exec(engInput)) !== null) {
+      while ((myArray = ruleRegExp.exec(inputStr)) !== null) {
 
         // Find matched rule and translated string.
         var strRepWith;
         for (var i=1; i<myArray.length; i++) {
-          if (!!myArray[i]) {
-            strRepWith = toZombieStr[i-1];
+          if (!!myArray[i] && !!regularRules[i-1]) {
+            strRepWith = (isZombify)  ? regularRules[i-1].getReplaceStrForEtoZ()
+                                      : regularRules[i-1].getReplaceStrForZtoE();
           }
         }
 
         // Compose new string from current position to matched position, and
         // append it to the zombified string.
         var matchedPos = myArray.index;
-        var strToKeep = engInput.substring (currentPos, matchedPos);
+        var strToKeep = inputStr.substring (currentPos, matchedPos);
         var newStr = (!!strToKeep) ? strToKeep+strRepWith : strRepWith;
-        zombifiedStr += newStr;
+        resultStr += newStr;
 
         // Update current position.
         currentPos = ruleRegExp.lastIndex;
       }
 
       // If there is any remaining string to translate, do it here.
-      if (currentPos < engInput.length) {
-        zombifiedStr += engInput.substring (currentPos, engInput.length);
+      if (currentPos < inputStr.length) {
+        resultStr += inputStr.substring (currentPos, inputStr.length);
       }
 
-      // Need to finalize for capitalizing the first character of sentences.
-      var zombifiedStrNew = "";
+      return resultStr;
+    }
+
+    
+    //
+    // Capitalize the first character of input string
+    //
+    function capitalizeFirstChar (str) {
+      var capedStr = str;
+      if (!!str && (str.length > 0)) {
+        capedStr = str.charAt(0).toUpperCase();
+        if (str.length > 1) {
+          capedStr += str.substring(1);
+        }
+      }
+      return capedStr;
+    }
+
+    //
+    // Capitalize each sentences
+    //
+    function capitalizeSentences (str) {
+      var inputStr = capitalizeFirstChar (str);
+
+      var capitalisedStr = "";
       var currentPos = 0;
       var capRegExp = new RegExp ("(?:[.!?]\\s*)\\w","gm");
-      while ((myArray = capRegExp.exec(zombifiedStr)) !== null) {
+      while ((myArray = capRegExp.exec(inputStr)) !== null) {
         var matchedStr = myArray[0];
         var posLastChar = myArray.index + matchedStr.length - 1;
 
-        zombifiedStrNew += zombifiedStr.substring (currentPos, posLastChar) + matchedStr.charAt(matchedStr.length - 1).toUpperCase ();
+        capitalisedStr += inputStr.substring (currentPos, posLastChar) + matchedStr.charAt(matchedStr.length - 1).toUpperCase ();
         currentPos = capRegExp.lastIndex;
       }
-      if (currentPos < zombifiedStr.length) {
-        zombifiedStrNew += zombifiedStr.substring (currentPos, zombifiedStr.length);
+      if (currentPos < inputStr.length) {
+        capitalisedStr += inputStr.substring (currentPos, inputStr.length);
       }
 
-      zombifiedStr = zombifiedStrNew;
-
-      //
-      // TRansate back to English
-      //
-      //var ruleRegExp2 = new RegExp("(rh\\b)|(\\b(hra)|(Hra)\\b)|(rr)|([iI])|([oO])|([uU])|([rR](?!\\b))", "g");
-
-      backToEnglishStr = zombifiedStr;
-/**
-      var zombifiedStrRegular = "";
-      for (var i=0; i<engInput.length; i++) {
-        var ch = engInput.charAt(i);
-        var isEOS = (i === (engInput.length-1));
-        var  resultStr = null;
-        for (var j=0; j<regularRules.length; j++) {
-          resultStr = regularRules[j].zombify (ch, i, isEOS);
-          if (!!resultStr) break;
-        }
-        if (resultStr === null) resultStr = ch;
-        zombifiedStrRegular = zombifiedStrRegular.concat (resultStr);
-      }
-
-      var zombifiedStr = "";
-      for (var i=0; i<zombifiedStrRegular.length; i++) {
-        var ch = zombifiedStrRegular.charAt(i);
-        var isEOS = (i === (zombifiedStrRegular.length-1));
-        var  resultStr = null;
-        for (var j=0; j<endRules.length; j++) {
-          resultStr = endRules[j].zombify (ch, i, isEOS);
-          if (!!resultStr) break;
-        }
-        if (resultStr === null) resultStr = ch;
-        zombifiedStr = zombifiedStr.concat (resultStr);
-      }
-**/
-      $('#zombie').val(zombifiedStr);
-      $('#zombie2').val(zombifiedStr);
-      $('#english2').val(backToEnglishStr);
-    }
-
-    function unzombify(){
-
+      return capitalisedStr;
     }
 
     function ZombifyRule_End_r() {
@@ -139,73 +164,131 @@ function ($) {
         }
         return null;
       }
+
+      this.getRegExpForEtoZ = function () {
+        return "(r\\b)";
+      }
+      this.getReplaceStrForEtoZ = function () {
+        return "rh";
+      }
+
+      this.getRegExpForZtoE = function () {
+        return "(rh\\b)"
+      }
+      this.getReplaceStrForZtoE = function () {
+        return "r";
+      }
     }
+
     function ZombifyRule_aA() {
-      this.zombify = function (ch, idx, isEOS) {
-        if ((ch === 'a') || (ch === 'A')) {
-          return 'hra';
-        }
-        return null;
+      this.getRegExpForEtoZ = function () {
+        return "(\\b[aA]\\b)";
+      }
+      this.getReplaceStrForEtoZ = function () {
+        return "hra";
+      }
+
+      this.getRegExpForZtoE = function () {
+        return "(\\b(?:hra)|(?:Hra)\\b)"
+      }
+      this.getReplaceStrForZtoE = function () {
+        return "a";
       }
     }
+
+    //
+    // It handles a simple rule (one English character maps to zombie string)
+    //
+    function ZombifyRule_Simple (engCh, zomStr) {
+      var zomStrCap = capitalizeFirstChar(zomStr);
+
+      var _RegExpForEtoZ = "([" + engCh + engCh.toUpperCase() + "])";
+      var _RegExpForZtoE = "((?:" + zomStr + ")|(?:" + zomStrCap + "))";
+      var _engStr = engCh;
+      var _zomStr = zomStr;
+      this.getRegExpForEtoZ = function () {
+        return _RegExpForEtoZ;
+      }
+      this.getReplaceStrForEtoZ = function () {
+        return _zomStr;
+      }
+      this.getRegExpForZtoE = function () {
+        return _RegExpForZtoE;
+      }
+      this.getReplaceStrForZtoE = function () {
+        return _engStr;
+      }
+    }
+
+    //
+    // Rule for "e or E" --> "rr" (Derived from ZombifyRule_Simple)
+    //
     function ZombifyRule_eE() {
-      this.zombify = function (ch, idx, isEOS) {
-        if ((ch === 'e') || (ch === 'E')) {
-          return 'rr';
-        }
-        return null;
-      }
+      ZombifyRule_Simple.call(this, "e", "rr");
     }
+    ZombifyRule_eE.prototype = Object.create(ZombifyRule_Simple.prototype);
+    ZombifyRule_eE.prototype.constructor = ZombifyRule_eE;
+
+    //
+    // Rule for "i or I" --> "rrRr" (Derived from ZombifyRule_Simple)
+    //
     function ZombifyRule_iI() {
-      this.zombify = function (ch, idx, isEOS) {
-        if ((ch === 'i') || (ch === 'I')) {
-          return 'rrRr';
-        }
-        return null;
-      }
+      ZombifyRule_Simple.call(this, "i", "rrRr");
     }
+    ZombifyRule_iI.prototype = Object.create(ZombifyRule_Simple.prototype);
+    ZombifyRule_iI.prototype.constructor = ZombifyRule_iI;
+
+    //
+    // Rule for "o or O" --> "rrrRr" (Derived from ZombifyRule_Simple)
+    //
     function ZombifyRule_oO() {
-      this.zombify = function (ch, idx, isEOS) {
-        if ((ch === 'o') || (ch === 'O')) {
-          return 'rrrRr';
-        }
-        return null;
-      }
+      ZombifyRule_Simple.call(this, "o", "rrrRr");
     }
+    ZombifyRule_oO.prototype = Object.create(ZombifyRule_Simple.prototype);
+    ZombifyRule_oO.prototype.constructor = ZombifyRule_oO;
+
+    //
+    // Rule for "u or U" --> "rrrrRr" (Derived from ZombifyRule_Simple)
+    //
     function ZombifyRule_uU() {
-      this.zombify = function (ch, idx, isEOS) {
-        if ((ch === 'u') || (ch === 'U')) {
-          return 'rrrrRr';
-        }
-        return null;
-      }
+      ZombifyRule_Simple.call(this, "u", "rrrrRr");
     }
+    ZombifyRule_uU.prototype = Object.create(ZombifyRule_Simple.prototype);
+    ZombifyRule_uU.prototype.constructor = ZombifyRule_uU;
+
+    //
+    // Rule for "r or R" --> "RR" (Derived from ZombifyRule_Simple)
+    //
     function ZombifyRule_rR() {
-      this.zombify = function (ch, idx, isEOS) {
-        if ((ch === 'r') || (ch === 'R')) {
-          return 'RR';
-        }
-        return null;
-      }
+      ZombifyRule_Simple.call(this, "r", "RR");
     }
+    ZombifyRule_rR.prototype = Object.create(ZombifyRule_Simple.prototype);
+    ZombifyRule_rR.prototype.constructor = ZombifyRule_rR;
+
+    //
+    // Rule for "w or W" --> "wRw" (Derived from ZombifyRule_Simple)
+    //
+    function ZombifyRule_wW() {
+      ZombifyRule_Simple.call(this, "w", "wRw");
+    }
+    ZombifyRule_wW.prototype = Object.create(ZombifyRule_Simple.prototype);
+    ZombifyRule_wW.prototype.constructor = ZombifyRule_wW;
+
+    //
+    // Rule for "y or Y" --> "wwRy" (Derived from ZombifyRule_Simple)
+    //
+    function ZombifyRule_yY() {
+      ZombifyRule_Simple.call(this, "y", "wwRy");
+    }
+    ZombifyRule_yY.prototype = Object.create(ZombifyRule_Simple.prototype);
+    ZombifyRule_yY.prototype.constructor = ZombifyRule_yY;
 
     function ZombifyRule_CAP() {
-      this.endOfSentense = true;
-
-      this.zombify = function (ch, idx, isEOS) {
-        if (idx === 0) this.endOfSentense = true;
-
-        if (ch.search(/[.!?]/) === 0) {
-          this.endOfSentense = true;
-        } else if (this.endOfSentense) {
-          if (ch.search(/\s/) === -1) {
-            this.endOfSentense = false;
-            if (ch.search(/a-z/)) {
-              return ch.toUpperCase();
-            }
-          }
-        }
-        return null;
+      this.zombify = function (strInput) {
+        return capitalizeSentences (strInput);
+      }
+      this.unzombify = function (strInput) {
+        return capitalizeSentences (strInput);
       }
     }
 
