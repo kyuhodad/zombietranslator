@@ -8,10 +8,8 @@
     <title>Zombie Translator</title>
 
     <link rel="stylesheet" href="css/bootstrap.min.css" />
-    <!-- <script src="js/vendors/jquery.min.js"></script>
-    <script src="js/vendors/bootstrap.min.js"></script> -->
+
     <script data-main="js/app.js" src="js/vendors/require.js"></script>
-    <!-- <script src="js/app.js"></script> -->
 </head>
 <body>
     <div class="container">
@@ -23,27 +21,27 @@
                 </form>
             </div>
             <div class="col-md-6">
+                <form id="english-to-zombie-out-form">
+                    <label for="zombie">Traslated Zombie</label>
+                    <textarea readonly class="form-control" id="zombie-out"></textarea>
+                </form>
+            </div>
+        </div>
+
+        <div class="row well">
+            <div class="col-md-6">
+                <form id="zombie-to-english-out-form">
+                    <label for="english">Translated English</label>
+                    <textarea readonly class="form-control" id="english-out"></textarea>
+                </form>
+            </div>
+            <div class="col-md-6">
                 <form id="zombie-to-english-form">
                     <label for="zombie">Zombie</label>
                     <textarea class="form-control" id="zombie"></textarea>
                 </form>
             </div>
         </div>
-        <div class="row well">
-            <div class="col-md-6">
-                <form id="english-to-zombie-form2">
-                    <label for="english2">English</label>
-                    <textarea class="form-control" id="english2"></textarea>
-                </form>
-            </div>
-            <div class="col-md-6">
-                <form id="zombie-to-english-form2">
-                    <label for="zombie2">Zombie</label>
-                    <textarea class="form-control" id="zombie2"></textarea>
-                </form>
-            </div>
-        </div>
-
     </div>
 </body>
 </html>

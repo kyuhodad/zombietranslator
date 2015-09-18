@@ -1,20 +1,34 @@
-define (
-[
-  "jquery", "bootstrap"
-],
-function ($) {
+define ( [],
+  function () {
 
-  $(document).ready(function(){
-    $('#zombie-to-english-btn').click(function(event){
-      unzombify();
-      return false;
-    });
+    var ZombifyRules = function () {
+      this.applyRules = function (isZombify, inputStr){
+        // Apply regular rules.
+        var resultStr = applyRegularRules (isZombify, inputStr);
 
-    $('#english-to-zombie-btn').click(function(event){
-      zombify();
-      return false;
-    });
+        // Apply end rules.
+        for (var i=0; i<endRules.length; i++) {
+          if (isZombify) {
+            resultStr = endRules[i].zombify (resultStr);
+          } else {
+            resultStr = endRules[i].unzombify (resultStr);
+          }
+        }
+        return resultStr;
+      };
+    };
 
+    // 1. lower-case "r" at the end of words replaced with "rh".
+    // 2. an "a" or "A" by itself will be replaced with "hra".
+    // 3. the starts of sentences are capitalised (the "start of a sentence" is any occurrence of
+    //   ".!?", followed by a space, followed by a letter.)
+    // 4. "e" or "E" is replaced by "rr"
+    // 5. "i" or "I" is replaced by "rrRr"
+    // 6. "o" or "O" is replaced by "rrrRr"
+    // 7. "u" or "U" is replaced by "rrrrRr"
+    // 8. "r" or "R' is replaced by "RR"
+    // 9. "w" or "W' is replaced by "wRw"
+    //10. "y" or "Y' is replaced by "wwRy"
     var regularRules = [
       new ZombifyRule_End_r (),
       new ZombifyRule_aA (),
@@ -28,51 +42,7 @@ function ($) {
     ];
     var endRules = [
       new ZombifyRule_CAP ()
-    ]
-
-    function zombify(){
-      // 1. lower-case "r" at the end of words replaced with "rh".
-      // 2. an "a" or "A" by itself will be replaced with "hra".
-      // 3. the starts of sentences are capitalised (the "start of a sentence" is any occurrence of
-      //   ".!?", followed by a space, followed by a letter.)
-      // 4. "e" or "E" is replaced by "rr"
-      // 5. "i" or "I" is replaced by "rrRr"
-      // 6. "o" or "O" is replaced by "rrrRr"
-      // 7. "u" or "U" is replaced by "rrrrRr"
-      // 8. "r" or "R' is replaced by "RR"
-      // 9. "w" or "W' is replaced by "wRw"
-      //10. "y" or "Y' is replaced by "wwRy"
-
-      var inputStr = $('#english').val();
-
-      // Apply regular rules.
-      var resultStr = applyRegularRules (true, inputStr);
-
-      // Apply end rules.
-      for (var i=0; i<endRules.length; i++) {
-        resultStr = endRules[i].zombify (resultStr);
-      }
-
-      $('#zombie').val(resultStr);
-      $('#zombie2').val(resultStr);
-
-      // Testing purpose!!!!
-      unzombify ();
-    }
-
-    function unzombify(){
-      var inputStr = $('#zombie').val();
-
-      // Apply regular rules.
-      var resultStr = applyRegularRules (false, inputStr);
-
-      // Apply end rules.
-      for (var i=0; i<endRules.length; i++) {
-        resultStr = endRules[i].unzombify (resultStr);
-      }
-
-      $('#english2').val(resultStr);
-    }
+    ];
 
     //
     // Apply regular rules
@@ -81,7 +51,7 @@ function ($) {
       var ruleRegExpStr = "";
       for (var i=0; i<regularRules.length; i++) {
         ruleRegExpStr += (isZombify)  ? regularRules[i].getRegExpForEtoZ ()
-                                      : regularRules[i].getRegExpForZtoE ();
+        : regularRules[i].getRegExpForZtoE ();
         if (i < (regularRules.length-1)) ruleRegExpStr += "|";
       }
       var ruleRegExp = new RegExp(ruleRegExpStr, "gm");
@@ -96,7 +66,7 @@ function ($) {
         for (var i=1; i<myArray.length; i++) {
           if (!!myArray[i] && !!regularRules[i-1]) {
             strRepWith = (isZombify)  ? regularRules[i-1].getReplaceStrForEtoZ()
-                                      : regularRules[i-1].getReplaceStrForZtoE();
+            : regularRules[i-1].getReplaceStrForZtoE();
           }
         }
 
@@ -119,7 +89,7 @@ function ($) {
       return resultStr;
     }
 
-    
+
     //
     // Capitalize the first character of input string
     //
@@ -292,7 +262,5 @@ function ($) {
       }
     }
 
-    $('#english').on("keyup", zombify);
-
+    return ZombifyRules;
   });
-});
