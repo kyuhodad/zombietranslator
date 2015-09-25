@@ -7,8 +7,10 @@ function () {
 
   // 1. lower-case "r" at the end of words replaced with "rh".
   // 2. an "a" or "A" by itself will be replaced with "hra".
-  // 3. the starts of sentences are capitalised (the "start of a sentence" is any occurrence of
-  //   ".!?", followed by a space, followed by a letter.)
+  // 3. the starts of sentences are capitalised
+  //    : the "start of a sentence" is
+  //      the first visible letter of whole string to translate, or
+  //      any occurrence of ".!?", followed by a space, followed by a letter.
   // 4. "e" or "E" is replaced by "rr"
   // 5. "i" or "I" is replaced by "rrRr"
   // 6. "o" or "O" is replaced by "rrrRr"
@@ -171,14 +173,18 @@ function () {
   // Capitalize the first character of input string
   //
   function capitalizeFirstChar (str) {
-    var capedStr = str;
+    var cappedStr = str;
     if (!!str && (str.length > 0)) {
-      capedStr = str.charAt(0).toUpperCase();
-      if (str.length > 1) {
-        capedStr += str.substring(1);
+      cappedStr = "";
+      var index = str.search(/\S/);
+      if (index > 0) {
+        cappedStr = str.substring(0, index-1);
       }
+      cappedStr += str.charAt(index).toUpperCase();
+      if (index < (str.length-1))
+        cappedStr += str.substring(index+1);
     }
-    return capedStr;
+    return cappedStr;
   }
 
   //

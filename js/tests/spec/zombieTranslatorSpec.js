@@ -31,7 +31,7 @@ define(['zombieTranslator'], function(ZombieTranslator){
     describe('Rule2: <a or A> itself --> <hra>', function () {
       it ('should add "hra" if "a" or "A" itself is a word', function () {
         var testStrings = ["This is a pen.", "This is A pen."];
-        for (var i=0; i<2; i++) {
+        for (var i=0; i<testStrings.length; i++) {
           var splitWithSpace = transletor.translate(testStrings[i]).split(" ");
           expect(splitWithSpace.length).toBe(4);
           expect(transletor.translate(testStrings[i]))
@@ -48,11 +48,51 @@ define(['zombieTranslator'], function(ZombieTranslator){
       });
 
       it ('should handle multiple appearances of "a" or "A" as a word.', function () {
-        var splitWithSpace = transletor.translate("A Korean friend brought a gift to me.").split(" ");
+        var splitWithSpace = transletor.translate("A Korean friend brought a gift to me.").split(/\s+/);
         expect(splitWithSpace.length).toBe(8);
         expect(splitWithSpace[0]).toBe("Hra");
         expect(splitWithSpace[4]).toBe("hra");
       });
     });
+
+    // Capitalize the first character of sentences.
+    describe('Rule3: Capitalize the first character of sentences', function () {
+
+      it ('should capitalize the first visible letter.', function () {
+        var testStrings = ["begins with lower-case letter", "  begins with white spaces"];
+        for (var i=0; i<testStrings.length; i++) {
+          expect(isFirstVisibleCharUpperCase(transletor.translate(testStrings[i]))).toBe(true);
+        }
+      });
+
+      it ('should capitalize the first visible letter of sentences.', function () {
+        var testString = "First sentece. second one? now third one! finally last one.";
+        var splitWithEOS = transletor.translate(testString).split(/[\.!\?]/);
+        for(var i=0; i<splitWithEOS.length; i++) {
+          expect(isFirstVisibleCharUpperCase(splitWithEOS[i])).toBe(true);
+        }
+      });
+
+      it ('should change only the first visible letter of sentences.', function () {
+        var testString = "First sentece. second one? now third one! finally last one.";
+        var testStringWithoutEOSMark = testString.replace(/[\.!\?]/g, "_");
+        var splitWithEOS = transletor.translate(testString).split(/[\.!\?]\s*/);
+        var splitWith_ = transletor.translate(testStringWithoutEOSMark).split(/_\s*/);
+
+        expect(splitWithEOS.length).toEqual(splitWith_.length);
+        for(var i=0; i<splitWithEOS.length; i++) {
+          expect(splitWithEOS[i].substring(1)).toEqual(splitWith_[i].substring(1));
+        }
+      });
+
+      function isFirstVisibleCharUpperCase (str) {
+        var trimmedStr = str.trim();
+        if (trimmedStr.length === 0) return true;
+        return trimmedStr.charAt(0) === trimmedStr.charAt(0).toUpperCase();
+      }
+    });
+
   });
+
+
 });
