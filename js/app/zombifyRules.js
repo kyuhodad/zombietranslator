@@ -93,6 +93,11 @@ function () {
         return regularRules[i];
       }
     }
+    for(var i=0; i<endRules.length; i++) {
+      if (endRules[i].id === ruleId) {
+        return endRules[i];
+      }
+    }
     return null;
   }
 
@@ -107,31 +112,33 @@ function () {
                                     : regularRules[i].getRegExpForZtoE ();
       if (i < (regularRules.length-1)) ruleRegExpStr += "|";
     }
-    var ruleRegExp = new RegExp(ruleRegExpStr, "gm");
+    var ruleRegExp = (ruleRegExpStr.length > 0) ? new RegExp(ruleRegExpStr, "gm") : null;
 
     var resultStr = "";
     var myArray;
     var currentPos = 0;
-    while ((myArray = ruleRegExp.exec(inputStr)) !== null) {
+    if (!!ruleRegExp) {
+      while ((myArray = ruleRegExp.exec(inputStr)) !== null) {
 
-      // Find matched rule and translated string.
-      var strRepWith;
-      for (var i=1; i<myArray.length; i++) {
-        if (!!myArray[i] && !!regularRules[i-1]) {
-          strRepWith = (isZombify)  ? regularRules[i-1].getReplaceStrForEtoZ()
-                                    : regularRules[i-1].getReplaceStrForZtoE();
+        // Find matched rule and translated string.
+        var strRepWith;
+        for (var i=1; i<myArray.length; i++) {
+          if (!!myArray[i] && !!regularRules[i-1]) {
+            strRepWith = (isZombify)  ? regularRules[i-1].getReplaceStrForEtoZ()
+                                      : regularRules[i-1].getReplaceStrForZtoE();
+          }
         }
+
+        // Compose new string from current position to matched position, and
+        // append it to the zombified string.
+        var matchedPos = myArray.index;
+        var strToKeep = inputStr.substring (currentPos, matchedPos);
+        var newStr = (!!strToKeep) ? strToKeep+strRepWith : strRepWith;
+        resultStr += newStr;
+
+        // Update current position.
+        currentPos = ruleRegExp.lastIndex;
       }
-
-      // Compose new string from current position to matched position, and
-      // append it to the zombified string.
-      var matchedPos = myArray.index;
-      var strToKeep = inputStr.substring (currentPos, matchedPos);
-      var newStr = (!!strToKeep) ? strToKeep+strRepWith : strRepWith;
-      resultStr += newStr;
-
-      // Update current position.
-      currentPos = ruleRegExp.lastIndex;
     }
 
     // If there is any remaining string to translate, do it here.
@@ -223,7 +230,7 @@ function () {
       cappedStr = "";
       var index = str.search(/\S/);
       if (index > 0) {
-        cappedStr = str.substring(0, index-1);
+        cappedStr = str.substring(0, index);
       }
       cappedStr += str.charAt(index).toUpperCase();
       if (index < (str.length-1))
