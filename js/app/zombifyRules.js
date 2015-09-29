@@ -1,27 +1,5 @@
 define ( [],
 function () {
-  // var ZombifyRules = function (rules) {
-  var ZombifyRules = function (rules) {
-    if (rules === undefined) rules = 0xffff;
-    this.applyRules = _applyRules;
-    this.initRules = _initRules;
-    this.getRule = _getRule;
-
-   _initRules (rules);
-  };
-  ZombifyRules.RULE = {
-    ZR_r_AtEOW:     { id: 0x0001, newRule: newZombifyRule_End_r, args: null},
-    ZR_aA_ALONE:    { id: 0x0002, newRule: newZombifyRule_aA, args: null},
-    ZR_CAPITALIZE:  { id: 0x0004, newRule: ZombifyRule_CAP, args: null},
-    ZR_eE_SIMPLE:   { id: 0x0008, newRule: newZombifyRule_Simple, args: ["e", "rr"] },
-    ZR_iI_SIMPLE:   { id: 0x0010, newRule: newZombifyRule_Simple, args: ["i", "rrRr"] },
-    ZR_oO_SIMPLE:   { id: 0x0020, newRule: newZombifyRule_Simple, args: ["o", "rrrRr"] },
-    ZR_uU_SIMPLE:   { id: 0x0040, newRule: newZombifyRule_Simple, args: ["u", "rrrrRr"] },
-    ZR_rR_SIMPLE:   { id: 0x0080, newRule: newZombifyRule_Simple, args: ["r", "RR"] },
-    ZR_wW_SIMPLE:   { id: 0x0100, newRule: newZombifyRule_Simple, args: ["w", "wRw"] },
-    ZR_yY_SIMPLE:   { id: 0x0200, newRule: newZombifyRule_Simple, args: ["y", "wwRy"] },
-    ZR_DEFAULT:     { id: 0xffff, newRule: null }
-  };
 
   // 1. lower-case "r" at the end of words replaced with "rh".
   // 2. an "a" or "A" by itself will be replaced with "hra".
@@ -36,118 +14,142 @@ function () {
   // 8. "r" or "R' is replaced by "RR"
   // 9. "w" or "W' is replaced by "wRw"
   //10. "y" or "Y' is replaced by "wwRy"
-  var regularRules = [];
-  var endRules = [];
 
-  function _initRules (rules) {
-    regularRules.splice(0);
-    endRules.splice(0);
+  var ZombifyRules = function (rules) {
+    if (rules === undefined) rules = 0xffff;
+    this.applyRules = _applyRules;
+    this.initRules = _initRules;
+    this.getRule = _getRule;
 
-    var regularRuleApplyingOrder = [
-      ZombifyRules.RULE.ZR_r_AtEOW,
-      ZombifyRules.RULE.ZR_aA_ALONE,
-      ZombifyRules.RULE.ZR_rR_SIMPLE,
-      ZombifyRules.RULE.ZR_yY_SIMPLE,
-      ZombifyRules.RULE.ZR_wW_SIMPLE,
-      ZombifyRules.RULE.ZR_uU_SIMPLE,
-      ZombifyRules.RULE.ZR_oO_SIMPLE,
-      ZombifyRules.RULE.ZR_iI_SIMPLE,
-      ZombifyRules.RULE.ZR_eE_SIMPLE
-    ];
+    var regularRules = [];
+    var endRules = [];
+    _initRules (rules);
 
-    for (var i=0; i<regularRuleApplyingOrder.length; i++) {
-      if ((rules & (regularRuleApplyingOrder[i].id)) != 0) {
-        var args = regularRuleApplyingOrder[i].args;
-        regularRules.push(regularRuleApplyingOrder[i].newRule(regularRuleApplyingOrder[i].id, args));
+    function _initRules (rules) {
+      regularRules.splice(0);
+      endRules.splice(0);
+
+      var regularRuleApplyingOrder = [
+        ZombifyRules.RULE.ZR_r_AtEOW,
+        ZombifyRules.RULE.ZR_aA_ALONE,
+        ZombifyRules.RULE.ZR_rR_SIMPLE,
+        ZombifyRules.RULE.ZR_yY_SIMPLE,
+        ZombifyRules.RULE.ZR_wW_SIMPLE,
+        ZombifyRules.RULE.ZR_uU_SIMPLE,
+        ZombifyRules.RULE.ZR_oO_SIMPLE,
+        ZombifyRules.RULE.ZR_iI_SIMPLE,
+        ZombifyRules.RULE.ZR_eE_SIMPLE
+      ];
+
+      for (var i=0; i<regularRuleApplyingOrder.length; i++) {
+        if ((rules & (regularRuleApplyingOrder[i].id)) != 0) {
+          var args = regularRuleApplyingOrder[i].args;
+          regularRules.push(regularRuleApplyingOrder[i].newRule(regularRuleApplyingOrder[i].id, args));
+        }
+      };
+
+      if ((rules & ZombifyRules.RULE.ZR_CAPITALIZE.id) != 0) {
+        endRules.push(new ZombifyRules.RULE.ZR_CAPITALIZE.newRule(ZombifyRules.RULE.ZR_CAPITALIZE.id));
       }
+    }
+
+    //
+    // Apply rules:
+    //  First, apply regular rules and then end rules which need to be applied
+    //  for the translate string (such as caputalizing).
+    //
+    function _applyRules (isZombify, inputStr){
+      // Apply regular rules.
+      var resultStr = applyRegularRules (isZombify, inputStr);
+
+      // Apply end rules.
+      for (var i=0; i<endRules.length; i++) {
+        if (isZombify) {
+          resultStr = endRules[i].zombify (resultStr);
+        } else {
+          resultStr = endRules[i].unzombify (resultStr);
+        }
+      }
+      return resultStr;
     };
 
-    if ((rules & ZombifyRules.RULE.ZR_CAPITALIZE.id) != 0) {
-      endRules.push(new ZombifyRules.RULE.ZR_CAPITALIZE.newRule(ZombifyRules.RULE.ZR_CAPITALIZE.id));
-    }
-  }
-
-  //
-  // Apply rules:
-  //  First, apply regular rules and then end rules which need to be applied
-  //  for the translate string (such as caputalizing).
-  //
-  function _applyRules (isZombify, inputStr){
-    // Apply regular rules.
-    var resultStr = applyRegularRules (isZombify, inputStr);
-
-    // Apply end rules.
-    for (var i=0; i<endRules.length; i++) {
-      if (isZombify) {
-        resultStr = endRules[i].zombify (resultStr);
-      } else {
-        resultStr = endRules[i].unzombify (resultStr);
+    function _getRule(ruleId) {
+      for(var i=0; i<regularRules.length; i++) {
+        if (regularRules[i].id === ruleId) {
+          return regularRules[i];
+        }
       }
+      for(var i=0; i<endRules.length; i++) {
+        if (endRules[i].id === ruleId) {
+          return endRules[i];
+        }
+      }
+      return null;
     }
-    return resultStr;
+
+    //
+    // Apply regular rules
+    // This rules use string pattern matching and replacing method by RegExp.
+    //
+    function applyRegularRules (isZombify, inputStr) {
+      var ruleRegExpStr = "";
+      for (var i=0; i<regularRules.length; i++) {
+        ruleRegExpStr += (isZombify)  ? regularRules[i].getRegExpForEtoZ ()
+        : regularRules[i].getRegExpForZtoE ();
+        if (i < (regularRules.length-1)) ruleRegExpStr += "|";
+      }
+      var ruleRegExp = (ruleRegExpStr.length > 0) ? new RegExp(ruleRegExpStr, "gm") : null;
+
+      var resultStr = "";
+      var myArray;
+      var currentPos = 0;
+      if (!!ruleRegExp) {
+        while ((myArray = ruleRegExp.exec(inputStr)) !== null) {
+
+          // Find matched rule and translated string.
+          var strRepWith;
+          for (var i=1; i<myArray.length; i++) {
+            if (!!myArray[i] && !!regularRules[i-1]) {
+              strRepWith = (isZombify)  ? regularRules[i-1].getReplaceStrForEtoZ()
+              : regularRules[i-1].getReplaceStrForZtoE();
+            }
+          }
+
+          // Compose new string from current position to matched position, and
+          // append it to the zombified string.
+          var matchedPos = myArray.index;
+          var strToKeep = inputStr.substring (currentPos, matchedPos);
+          var newStr = (!!strToKeep) ? strToKeep+strRepWith : strRepWith;
+          resultStr += newStr;
+
+          // Update current position.
+          currentPos = ruleRegExp.lastIndex;
+        }
+      }
+
+      // If there is any remaining string to translate, do it here.
+      if (currentPos < inputStr.length) {
+        resultStr += inputStr.substring (currentPos, inputStr.length);
+      }
+
+      return resultStr;
+    }
+
   };
 
-  function _getRule(ruleId) {
-    for(var i=0; i<regularRules.length; i++) {
-      if (regularRules[i].id === ruleId) {
-        return regularRules[i];
-      }
-    }
-    for(var i=0; i<endRules.length; i++) {
-      if (endRules[i].id === ruleId) {
-        return endRules[i];
-      }
-    }
-    return null;
-  }
-
-  //
-  // Apply regular rules
-  // This rules use string pattern matching and replacing method by RegExp.
-  //
-  function applyRegularRules (isZombify, inputStr) {
-    var ruleRegExpStr = "";
-    for (var i=0; i<regularRules.length; i++) {
-      ruleRegExpStr += (isZombify)  ? regularRules[i].getRegExpForEtoZ ()
-                                    : regularRules[i].getRegExpForZtoE ();
-      if (i < (regularRules.length-1)) ruleRegExpStr += "|";
-    }
-    var ruleRegExp = (ruleRegExpStr.length > 0) ? new RegExp(ruleRegExpStr, "gm") : null;
-
-    var resultStr = "";
-    var myArray;
-    var currentPos = 0;
-    if (!!ruleRegExp) {
-      while ((myArray = ruleRegExp.exec(inputStr)) !== null) {
-
-        // Find matched rule and translated string.
-        var strRepWith;
-        for (var i=1; i<myArray.length; i++) {
-          if (!!myArray[i] && !!regularRules[i-1]) {
-            strRepWith = (isZombify)  ? regularRules[i-1].getReplaceStrForEtoZ()
-                                      : regularRules[i-1].getReplaceStrForZtoE();
-          }
-        }
-
-        // Compose new string from current position to matched position, and
-        // append it to the zombified string.
-        var matchedPos = myArray.index;
-        var strToKeep = inputStr.substring (currentPos, matchedPos);
-        var newStr = (!!strToKeep) ? strToKeep+strRepWith : strRepWith;
-        resultStr += newStr;
-
-        // Update current position.
-        currentPos = ruleRegExp.lastIndex;
-      }
-    }
-
-    // If there is any remaining string to translate, do it here.
-    if (currentPos < inputStr.length) {
-      resultStr += inputStr.substring (currentPos, inputStr.length);
-    }
-
-    return resultStr;
-  }
+  ZombifyRules.RULE = {
+    ZR_r_AtEOW:     { id: 0x0001, newRule: newZombifyRule_End_r, args: null},
+    ZR_aA_ALONE:    { id: 0x0002, newRule: newZombifyRule_aA, args: null},
+    ZR_CAPITALIZE:  { id: 0x0004, newRule: ZombifyRule_CAP, args: null},
+    ZR_eE_SIMPLE:   { id: 0x0008, newRule: newZombifyRule_Simple, args: ["e", "rr"] },
+    ZR_iI_SIMPLE:   { id: 0x0010, newRule: newZombifyRule_Simple, args: ["i", "rrRr"] },
+    ZR_oO_SIMPLE:   { id: 0x0020, newRule: newZombifyRule_Simple, args: ["o", "rrrRr"] },
+    ZR_uU_SIMPLE:   { id: 0x0040, newRule: newZombifyRule_Simple, args: ["u", "rrrrRr"] },
+    ZR_rR_SIMPLE:   { id: 0x0080, newRule: newZombifyRule_Simple, args: ["r", "RR"] },
+    ZR_wW_SIMPLE:   { id: 0x0100, newRule: newZombifyRule_Simple, args: ["w", "wRw"] },
+    ZR_yY_SIMPLE:   { id: 0x0200, newRule: newZombifyRule_Simple, args: ["y", "wwRy"] },
+    ZR_DEFAULT:     { id: 0xffff, newRule: null }
+  };
 
   //
   // Base class for the regular rules
@@ -234,7 +236,7 @@ function () {
       }
       cappedStr += str.charAt(index).toUpperCase();
       if (index < (str.length-1))
-        cappedStr += str.substring(index+1);
+      cappedStr += str.substring(index+1);
     }
     return cappedStr;
   }

@@ -10,21 +10,26 @@ define(['zombieTranslator'], function(ZombieTranslator){
     describe('Rule1: <r> at the end of words --> <rh>', function () {
       it ('should add "rh" if a wrod ends with "r"', function () {
         expect(translator.translate("color"))
-        .toBe(translator.translate("colo") + "rh")
+        .toBe(translator.translate("colo") + "rh");
+
+        // unzombify test
+        expect(roundTripTest("color")).toBe(true);
       });
       it ('should not add "rh" if "r" is not the end of a word', function () {
-        expect(translator.translate("colors"))
-        .not.toMatch("rh");
-        expect(translator.translate("turn"))
-        .not.toMatch("rh");
+        expect(translator.translate("colors")).not.toMatch("rh");
+        expect(translator.translate("turn")).not.toMatch("rh");
+
+        // unzombify test
+        expect(roundTripTest("turn")).toBe(true);
       });
       it ('should add "rh" to the all words which end with "r"', function () {
         var splitWith_rh = translator.translate("What is the color of the flower, silver or ivory?").split("rh");
         expect(splitWith_rh.length).toBe(5);
-        expect(translator.translate("What is the color"))
-        .toMatch(splitWith_rh[0]);
-        expect(translator.translate("What is the color of the flower"))
-        .toMatch(splitWith_rh[0]+"rh"+splitWith_rh[1]+"rh");
+        expect(translator.translate("What is the color")).toMatch(splitWith_rh[0]);
+        expect(translator.translate("What is the color of the flower")).toMatch(splitWith_rh[0]+"rh"+splitWith_rh[1]+"rh");
+
+        // unzombify test
+        expect(roundTripTest("What is the color of the flower")).toBe(true);
       });
     });
 
@@ -38,14 +43,19 @@ define(['zombieTranslator'], function(ZombieTranslator){
           expect(translator.translate(testStrings[i]))
           .toBe(splitWithSpace[0] + " " + splitWithSpace[1] + " " + "hra " + splitWithSpace[3]);
         }
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
 
       it ('should not add "hra" if "a" or "A" itself is not a word', function () {
         var testStrings = ["He is an Irish.", "Another person joined my group.", "Beautiful day."];
         for (var i=0; i<testStrings.length; i++) {
-          expect(translator.translate(testStrings[i]))
-          .not.toMatch("hra");
+          expect(translator.translate(testStrings[i])).not.toMatch("hra");
         }
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
 
       it ('should handle multiple appearances of "a" or "A" as a word.', function () {
@@ -53,6 +63,9 @@ define(['zombieTranslator'], function(ZombieTranslator){
         expect(splitWithSpace.length).toBe(8);
         expect(splitWithSpace[0]).toBe("Hra");
         expect(splitWithSpace[4]).toBe("hra");
+
+        // unzombify test
+        expect(roundTripTest("A Korean friend brought a gift to me.")).toBe(true);
       });
     });
 
@@ -64,6 +77,9 @@ define(['zombieTranslator'], function(ZombieTranslator){
         for (var i=0; i<testStrings.length; i++) {
           expect(isFirstVisibleCharUpperCase(translator.translate(testStrings[i]))).toBe(true);
         }
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
 
       it ('should capitalize the first visible letter of sentences.', function () {
@@ -72,6 +88,9 @@ define(['zombieTranslator'], function(ZombieTranslator){
         for(var i=0; i<splitWithEOS.length; i++) {
           expect(isFirstVisibleCharUpperCase(splitWithEOS[i])).toBe(true);
         }
+
+        // unzombify test
+        expect(roundTripTest(testString)).toBe(true);
       });
 
       it ('should change only the first visible letter of sentences.', function () {
@@ -84,6 +103,9 @@ define(['zombieTranslator'], function(ZombieTranslator){
         for(var i=0; i<splitWithEOS.length; i++) {
           expect(splitWithEOS[i].substring(1)).toEqual(splitWith_[i].substring(1));
         }
+
+        // unzombify test
+        expect(roundTripTest(testString)).toBe(true);
       });
 
       function isFirstVisibleCharUpperCase (str) {
@@ -98,14 +120,23 @@ define(['zombieTranslator'], function(ZombieTranslator){
       it ('should work with simple words.', function () {
         var testStrings = ["Serve", "enter", "sleeve"];
         expect(checkWithSimpleRule(testStrings, /e|E/g, "rr")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
       it ('should work with a sentece.', function () {
         var testStrings = ["He needs to complete his homework.", "Enter the house."];
         expect(checkWithSimpleRule(testStrings, /e|E/g, "rr")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
       it ('should work with multiple sentences.', function () {
         var testString = "He needs to complete his homework. Enter the house.";
         expect(checkWithSimpleRule(testString, /e|E/g, "rr")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testString)).toBe(true);
       });
     });
 
@@ -114,14 +145,23 @@ define(['zombieTranslator'], function(ZombieTranslator){
       it ('should work with simple words.', function () {
         var testStrings = ["Tire", "iterative", "certify"];
         expect(checkWithSimpleRule (testStrings, /i|I/g, "rrRr")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
       it ('should work with a sentece.', function () {
         var testStrings = ["His favorit winter sport is ski.", "In the stromy wind, she was still there."];
         expect(checkWithSimpleRule (testStrings, /i|I/g, "rrRr")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
       it ('should work with multiple sentences.', function () {
         var testString = "His favorit winter sport is ski. In the stromy wind, she was still there.";
         expect(checkWithSimpleRule (testString, /i|I/g, "rrRr")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testString)).toBe(true);
       });
     });
 
@@ -130,6 +170,9 @@ define(['zombieTranslator'], function(ZombieTranslator){
       it ('should work with simple words.', function () {
         var testStrings = ["Boston", "objective", "piano"];
         expect(checkWithSimpleRule (testStrings, /o|O/g, "rrrRr")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
       it ('should work with a sentece.', function () {
         var testStrings = [
@@ -138,12 +181,18 @@ define(['zombieTranslator'], function(ZombieTranslator){
           "Google Chrome is open on tying karam start."
         ];
         expect(checkWithSimpleRule (testStrings, /o|O/g, "rrrRr")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
       it ('should work with multiple sentences.', function () {
         var testString =  "Open those windows! " +
                           "Optimization software CD is on the table. " +
                           "Google Chrome is open on tying karam start.";
         expect(checkWithSimpleRule (testString, /o|O/g, "rrrRr")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testString)).toBe(true);
       });
     });
 
@@ -152,6 +201,9 @@ define(['zombieTranslator'], function(ZombieTranslator){
       it ('should work with simple words.', function () {
         var testStrings = ["Undeground", "tunner", "CPU"];
         expect(checkWithSimpleRule (testStrings, /u|U/g, "rrrrRr")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
       it ('should work with a sentece.', function () {
         var testStrings = [
@@ -160,12 +212,18 @@ define(['zombieTranslator'], function(ZombieTranslator){
           "I LOVE U :)"
         ];
         expect(checkWithSimpleRule (testStrings, /u|U/g, "rrrrRr")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
       it ('should work with multiple sentences.', function () {
         var testString =  "Do you know what unary operator? " +
                           "Under the cucumber slice, I found a coin. " +
                           "I LOVE U :)"
         expect(checkWithSimpleRule (testString, /u|U/g, "rrrrRr")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testString)).toBe(true);
       });
     });
 
@@ -174,12 +232,18 @@ define(['zombieTranslator'], function(ZombieTranslator){
       it ('should work with simple words.', function () {
         var testStrings = ["radio", "serious"];
         expect(checkWithSimpleRule (testStrings, /r|R/g, "RR")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
 
       it ('should not replace thr "r" at the end of a word.', function () {
         var translatedStr = translator.translate("render");
         expect(translatedStr.substr(0,2)).toBe("RR");
         expect(translatedStr.substr(translatedStr.length-3,2)).not.toBe("RR");
+
+        // unzombify test
+        expect(roundTripTest("render")).toBe(true);
       });
 
       it ('should work with a sentece.', function () {
@@ -189,12 +253,18 @@ define(['zombieTranslator'], function(ZombieTranslator){
           "Relational database are commonly used in industry."
         ];
         expect(checkWithSimpleRule (testStrings, /r|R/g, "RR")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
       it ('should work with multiple sentences.', function () {
         var testString =  "My all relatives are living in Korea. " +
                           "How are you? " +
                           "Relational database are commonly used in industry."
         expect(checkWithSimpleRule (testString, /r|R/g, "RR")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testString)).toBe(true);
       });
     });
 
@@ -203,6 +273,9 @@ define(['zombieTranslator'], function(ZombieTranslator){
       it ('should work with simple words.', function () {
         var testStrings = ["World", "window", "Downy"];
         expect(checkWithSimpleRule (testStrings, /w|W/g, "wRw")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
       it ('should work with a sentece.', function () {
         var testStrings = [
@@ -211,12 +284,18 @@ define(['zombieTranslator'], function(ZombieTranslator){
           "I would like to hear today news."
         ];
         expect(checkWithSimpleRule (testStrings, /w|W/g, "wRw")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
       it ('should work with multiple sentences.', function () {
         var testString =  "Now, it is a show time! " +
                           "Would you, please, open the window? " +
                           "I would like to hear today news."
         expect(checkWithSimpleRule (testString, /w|W/g, "wRw")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testString)).toBe(true);
       });
     });
 
@@ -225,6 +304,9 @@ define(['zombieTranslator'], function(ZombieTranslator){
       it ('should work with simple words.', function () {
         var testStrings = ["Yellow", "envy", "Toyota"];
         expect(checkWithSimpleRule (testStrings, /y|Y/g, "wwRy")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
       it ('should work with a sentece.', function () {
         var testStrings = [
@@ -233,14 +315,35 @@ define(['zombieTranslator'], function(ZombieTranslator){
           "I couldn\'t stop yawning during the meeting."
         ];
         expect(checkWithSimpleRule (testStrings, /y|Y/g, "wwRy")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testStrings)).toBe(true);
       });
       it ('should work with multiple sentences.', function () {
         var testString =  "Young in heart." +
                           "Did you buy the yellow yarn. " +
                           "I couldn\'t stop yawning during the meeting.";
         expect(checkWithSimpleRule (testString, /y|Y/g, "wwRy")).toBe(true);
+
+        // unzombify test
+        expect(roundTripTest(testString)).toBe(true);
       });
     });
+
+    // Test for long senteces using round-trip test.
+    // NOTE: 'ei' cannot be unzombified correctly. So, 'either' is modified to 'e_ither' in following test.
+    describe('Round-trip test for long senteces', function () {
+      it ('should properly transalte back to original senteces.', function () {
+        var testString =
+                    "The end is nigh!\n" +
+                    "But we can prepare. In this assignment we will begin preparing for " +
+                    "the end by creating a simple zombie translator. This can be used " +
+                    "by the living for e_ither concealment or bartering and the living " +
+                    "impaired will have an easier time asking for brains.";
+        expect(roundTripTest(testString)).toBe(true);
+      });
+    });
+
 
     // ------------------------------------------------------------------------------------
     // Apply the rule replacing chToReplace with strReplaceWith to given string(strToTest)
@@ -315,6 +418,21 @@ define(['zombieTranslator'], function(ZombieTranslator){
         if (currentStr === undefined || currentStr.length == 0) break;
       }
       return true;
+    }
+
+    function roundTripTest (testStrings) {
+      if (typeof testStrings === 'string') {
+        return _roundTripTest (testStrings);
+      } else {
+        for (var i=0; i<testStrings.length; i++) {
+          if (!_roundTripTest(testStrings[i])) return false;
+        }
+        return true;
+      }
+    }
+    function _roundTripTest (testString) {
+      var roundTripStr = translator.translateBack(translator.translate(testString));
+      return roundTripStr.toLowerCase() === testString.toLowerCase();
     }
 
   });
