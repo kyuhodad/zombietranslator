@@ -1,7 +1,7 @@
 define(['zombieTranslator'], function(ZombieTranslator){
   var translator = {};
 
-  describe('Zombie Translator', function () {
+  describe('Zombie Translator: Tests with applying all rules.', function () {
     beforeEach (function () {
       translator = new ZombieTranslator ();
     });
